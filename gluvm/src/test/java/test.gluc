@@ -1,0 +1,15 @@
+.method add(II)I
+iload 0
+iload 1
+iadd
+return
+.endmethod
+.method main()V
+ldc 1
+ldc 2
+iload 0
+iload 1
+invoke add(II)I
+iload 2
+invoke println(I)V
+.endmethod

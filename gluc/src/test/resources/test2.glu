@@ -1,0 +1,31 @@
+int myAdd(int x, int y) {
+    return x + y;
+}
+
+void main() {
+    int i, j, k, z;
+    i = 57;
+    j = 333;
+    z = i+ 2 +49;
+    int d = 3;
+    k = myAdd(i, j);
+    int n = read();
+
+    if(i > j) {
+        return;
+    }
+
+    if(true){
+        k = 777;
+    }
+    else if(true && false)
+    {
+    }
+    else{
+        k = 666;
+    }
+    while(true) {
+        k = k + 1;
+    }
+    println(k);
+}
