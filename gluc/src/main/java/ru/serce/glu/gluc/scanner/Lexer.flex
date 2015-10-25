@@ -67,7 +67,6 @@ ALPHA=[A-Za-z_]
 
 {ALPHA}({ALPHA}|{DIGIT})* { return new Symbol(sym.IDENTIFIER, yychar, yychar + yytext().length() - 1, yytext()); }
 [\"]                      { stringBuffer.setLength(0); stringBuffer.append('\"'); yybegin(STRING); }
-['][^']*[']               { return new Symbol(sym.CHAR_LIT,   yychar, yychar + yytext().length() - 1, new Character(yytext().charAt(1))); }
 {DIGIT}+\.{DIGIT}+        { return new Symbol(sym.FLOAT_LIT,  yychar, yychar + yytext().length() - 1, new Double(yytext())); }
 {DIGIT}+                  { return new Symbol(sym.INT_LIT,    yychar, yychar + yytext().length() - 1, new Integer(yytext())); }
 }

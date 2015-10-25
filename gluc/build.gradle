@@ -13,7 +13,7 @@ repositories {
 task('parser') << {
     ant.taskdef(classname: "java_cup.anttask.CUPTask", name: "cup", classpath: configurations.javaCup.asPath)
     ant.cup(srcfile: 'gluc/src/main/java/ru/serce/glu/gluc/parser/Parser.cup',
-            destdir: 'gluc/srce/main/java/',
+            destdir: 'gluc/src/main/java/',
             parser: 'Parser')
 }
 

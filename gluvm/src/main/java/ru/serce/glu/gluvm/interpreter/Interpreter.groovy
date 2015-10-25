@@ -1,7 +1,6 @@
 package ru.serce.glu.gluvm.interpreter
 
 import groovy.transform.Canonical
-import jdk.nashorn.internal.ir.annotations.Immutable
 import ru.serce.glu.gluc.bytecode.BYTECODES
 import ru.serce.glu.gluvm.Program
 
@@ -18,7 +17,6 @@ class Frame {
 }
 
 @Canonical
-@Immutable
 class GMethod {
     int execCounter = 0
     String signature
@@ -31,10 +29,10 @@ class Interpreter {
 
     static final long STACK_SIZE = 2000;
     private final Map<String, GMethod> methods
-    private final long[] globalStack = new long[STACK_SIZE]
-    private int gsp = 0
+    private final long[] stack = new long[STACK_SIZE]
+    private int sp = 0
+    private int fp = 0
     private final ArrayDeque<Frame> frames = new ArrayDeque<>()
-    private ArrayDeque<Long> stack
 
 
     Interpreter(Program program) {
@@ -67,45 +65,45 @@ class Interpreter {
     def retFun(Instruction instruction) {
         def ops = instruction.args
         def top = frames.pop()
-        stack = frames.peek().operandStack
-        if (ops.size() > 0) {
-            def res = top.operandStack.pop()
-            stack.push(res)
-        }
+//        stack = frames.peek().operandStack
+//        if (ops.size() > 0) {
+//            def res = top.operandStack.pop()
+//            stack.push(res)
+//        }
     }
 
     def ldc(Object o) {
         def val = o as long
-        stack.push(val)
+//        stack.push(val)
     }
 
     private iadd() {
-        def a = stack.pop()
-        def b = stack.pop()
-        stack.push(a + b)
+//        def a = stack.pop()
+//        def b = stack.pop()
+//        stack.push(a + b)
     }
 
     private invoke(Instruction instruction) {
-        def frame = new Frame();
-        frames.push(frame)
-        stack = frame.operandStack
-        def method = methods.get(instruction.args.first())
-        if (!method) {
-            throw new RuntimeException("Unknown method signature $method")
-        }
-        gsp -= method.locals
-        method.execCounter++
-        for (instr in method.instructions) {
-            interpret(instr)
-        }
+//        def frame = new Frame();
+//        frames.push(frame)
+//        stack = frame.operandStack
+//        def method = methods.get(instruction.args.first())
+//        if (!method) {
+//            throw new RuntimeException("Unknown method signature $method")
+//        }
+//        sp -= method.locals
+//        method.execCounter++
+//        for (instr in method.instructions) {
+//            interpret(instr)
+//        }
     }
 
     private iload(Object o) {
-        def i = o as int
-        def frame = frames.pop()
-        long[] prevStack = frames.peek().operandStack
-        stack.push(prevStack[prevStack.size() - i - 1])
-        frames.push(frame)
+//        def i = o as int
+//        def frame = frames.pop()
+//        long[] prevStack = frames.peek().operandStack
+//        stack.push(prevStack[prevStack.size() - i - 1])
+//        frames.push(frame)
 
     }
 }
