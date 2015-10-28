@@ -20,15 +20,18 @@ class ByteCodeParser {
                 .findAll { !it.isEmpty() }
                 .collect { it.split("\\s+") };
         def methods = [:]
-        String sig = ""
+        String sig = ''
         List<Instruction> instructions = []
 
         for (line in bc) {
-            if (line[0] == ".method") {
+            if (line[0] == '.method') {
                 sig = line[1]
                 instructions = []
-            } else if (line[0] == ".endmethod") {
-                methods[sig] = new GMethod(signature: sig, instructions: instructions, locals: 2)
+            } else if (line[0] == '.endmethod') {
+                def vars = line[1..-1].collect { it.toInteger() }
+                def argSize = vars[0]
+                def locals = vars[1]
+                methods[sig] = new GMethod(sig, instructions, argSize, locals)
             } else {
                 def op = line[0].toUpperCase() as BYTECODES
                 instructions << new Instruction(op, line[1..<line.size()])

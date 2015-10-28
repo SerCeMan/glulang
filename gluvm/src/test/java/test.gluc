@@ -3,13 +3,16 @@ iload 0
 iload 1
 iadd
 return
-.endmethod
+.endmethod 2 0
 .method main()V
 ldc 1
+istore 0
 ldc 2
+istore 1
 iload 0
 iload 1
 invoke add(II)I
+istore 2
 iload 2
 invoke println(I)V
-.endmethod
+.endmethod 0 3

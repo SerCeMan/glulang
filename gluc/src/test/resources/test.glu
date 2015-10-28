@@ -3,8 +3,11 @@ int add(int x, int y) {
 }
 
 void main() {
-    int a = 1;
-    int b = 2;
-    int c = add(a, b);
+    int a;
+    a = 1;
+    int b;
+    b = 2;
+    int c;
+    c = add(a, b);
     println(c);
 }

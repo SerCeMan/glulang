@@ -12,6 +12,7 @@ public class CodeGenVisitor implements SimpleVisitor {
     private PrintStream stream
     private int labelIndex
     private CompilationUnit declarationsNode
+    private int localsCount
 
 
     public CodeGenVisitor(PrintStream stream) {
@@ -126,9 +127,18 @@ public class CodeGenVisitor implements SimpleVisitor {
                 visitCompUnit(node)
                 break
 
+            case VARIABLE_DECLARATION:
+                visitVarDecl(node)
+                break;
+
             default:
                 visitAllChildren(node)
         }
+    }
+
+    def visitVarDecl(ASTNode node) {
+        localsCount++
+        visitAllChildren(node)
     }
 
     private void visitCompUnit(ASTNode node) {
@@ -265,12 +275,19 @@ public class CodeGenVisitor implements SimpleVisitor {
 
         TypeNode typeNode = (TypeNode) node.getChild(2)
         String returnType = typeNode.getType().getSignature()
+        def parameters = node.getChild(1)
+        int argSize = parameters.children.size()
+
+        int prevLocalsCount = localsCount
+        localsCount = 0
 
         stream.print(".method $methodName(")
-        node.getChild(1).accept(this)
+        parameters.accept(this)
         stream.println(")$returnType")
         node.getChild(3).accept(this)
-        stream.println(".endmethod")
+        stream.println(".endmethod $argSize $localsCount")
+
+        localsCount = prevLocalsCount
     }
 
     private void visitMultiplicationNode(ASTNode node) {

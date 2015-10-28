@@ -12,6 +12,7 @@ class Main {
         }
 
         Program program = new ByteCodeParser(args[0]).parse()
-        new Interpreter(program).interpret(new Instruction(BYTECODES.INVOKE, ["main()V"]))
+        new Interpreter(program)
+                .interpret(new Instruction(BYTECODES.INVOKE, ["main()V"]))
     }
 }
