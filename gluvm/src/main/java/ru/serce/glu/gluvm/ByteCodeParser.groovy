@@ -7,10 +7,12 @@ import ru.serce.glu.gluvm.interpreter.Instruction
 
 @TupleConstructor
 class ByteCodeParser {
-    String fileName
 
-    Program parse() {
-        def lines = new File(fileName).readLines()
+    def Program parseText(String txt) {
+        parseLines(txt.split('\n').toList())
+    }
+
+    def Program parseLines(List<String> lines) {
         new Program(parseMethods(lines))
     }
 

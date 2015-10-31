@@ -19,7 +19,6 @@ enum BYTECODES {
     IF_ICMPGE,
     IF_ICMPLT,
     IF_ICMPNE,
-    IF_EQ,
     GOTO,
     INVOKE,
     IMUL,

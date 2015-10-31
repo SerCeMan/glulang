@@ -42,7 +42,8 @@ class Interpreter {
 
     class Frame {
         def GMethod method
-        private int fp = sp - method.argSize + method.locals
+        private int fp = sp - method.argSize
+        int instructionIndex = 0
 
         Frame(GMethod method) {
             this.method = method
@@ -53,7 +54,7 @@ class Interpreter {
         }
 
         def store(long idx, long val) {
-            stack[(int)(fp + method.argSize + idx)] = val
+            stack[(int) (fp + idx)] = val
         }
     }
 
@@ -67,15 +68,16 @@ class Interpreter {
         def prlnSig = "println(I)V"
         methods[prlnSig] = new GMethod(prlnSig, [], 1, 0, true)
         stdlib[prlnSig] = { List<? extends Object> args ->
-            println frames.peek().getLocals(1)
+            def top = pop()
+            println top
             retFun(new Instruction(RETURN, []))
         }
     }
 
     def interpret(Instruction instruction) {
-//        println "$instruction.code, $instruction.args, SP = $sp"
-//        println(stack.toList().takeWhile { it != 0 })
-//        println()
+        System.err.println "$instruction.code, $instruction.args, SP = $sp"
+        System.err.println(stack.toList().take(sp + 1))
+        System.err.println()
         switch (instruction.code) {
             case ILOAD:
                 iload(instruction.args.first())
@@ -95,12 +97,43 @@ class Interpreter {
             case ISTORE:
                 istore(instruction.args.first())
                 break
+            case LABEL:
+                break
+            case ICONST_0:
+                push(0)
+                break
+            case ICONST_1:
+                push(1)
+                break
+            case IFEQ:
+                ifeq(instruction.args.first())
+                break
+            case GOTO:
+                gotof(instruction.args.first())
+                break
+
             default:
                 throw new RuntimeException("Unknown instruction! $instruction")
 
         }
-//        println(stack.toList().takeWhile { it != 0 })
-//        println('-------------')
+        System.err.println(stack.toList().take(sp + 1))
+        System.err.println('-------------')
+    }
+
+    def gotof(Object idx) {
+        def instructions = frames.peek().method.instructions
+        def index = instructions.findIndexOf { Instruction i -> i.code == LABEL && i.args.first().toString() == idx }
+        if (index == -1) {
+            throw new RuntimeException("Unknown label index $idx")
+        }
+        frames.peek().instructionIndex = index
+    }
+
+    def ifeq(Object val) {
+        def top = pop()
+        if (0L == top) {
+            gotof(val)
+        }
     }
 
     def istore(Object o) {
@@ -114,13 +147,13 @@ class Interpreter {
         def frame = frames.pop()
         def fp = frame.fp
 
-        if (ops.size() > 0) {
+//        if (ops.size() > 0) {
             def res = pop()
             sp = fp
             push(res)
-        } else {
-            sp = fp
-        }
+//        } else {
+//            sp = fp
+//        }
     }
 
     def ldc(Object o) {
@@ -139,7 +172,6 @@ class Interpreter {
     private iadd() {
         def a = pop()
         def b = pop()
-        sp -= 2
         push(a + b)
     }
 
@@ -152,14 +184,20 @@ class Interpreter {
         def frame = new Frame(method);
         frames.push(frame)
         method.execCounter++
+        sp += method.locals
         if (method.isStdlib()) {
             if (method.isStdlib()) {
                 stdlib[method.signature](instruction.args)
             }
         } else {
-            for (instr in method.instructions) {
+            def instructions = method.instructions
+            for (; frame.instructionIndex < instructions.size(); frame.instructionIndex++) {
+                def instr = instructions[frame.instructionIndex]
                 interpret(instr)
             }
+//            for (instr in method.instructions) {
+//                interpret(instr)
+//            }
         }
     }
 

@@ -3,14 +3,17 @@ package ru.serce.glu.gluc;
 import ru.serce.glu.gluc.ast.CompilationUnit;
 import ru.serce.glu.gluc.parser.Parser;
 import ru.serce.glu.gluc.scanner.Scanner;
-import ru.serce.glu.gluc.visitors.TypeVisitor;
 import ru.serce.glu.gluc.visitors.CodeGenVisitor;
 import ru.serce.glu.gluc.visitors.LocalVarMapVisitor;
 import ru.serce.glu.gluc.visitors.PrinterVisitor;
+import ru.serce.glu.gluc.visitors.TypeVisitor;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.PrintStream;
 
 /**
  * @author serce
@@ -30,8 +33,25 @@ public class Compiler {
 
     private final String source;
 
-    private Compiler(String source) {
+    public Compiler(String source) {
         this.source = source;
+    }
+
+    // todo refactor
+    public String eval(String text) {
+        Parser parser = new Parser(new Scanner(new DataInputStream(new ByteArrayInputStream(text.getBytes()))));
+        try {
+            parser.parse();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        CompilationUnit cu = parser.getRoot();
+        typeAnalysis(cu);
+        localVarMapping(cu);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream stream = new PrintStream(baos);
+        cu.accept(new CodeGenVisitor(stream));
+        return baos.toString();
     }
 
     private void run() {

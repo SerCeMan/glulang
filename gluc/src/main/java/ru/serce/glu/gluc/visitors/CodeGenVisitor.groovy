@@ -1,6 +1,7 @@
 package ru.serce.glu.gluc.visitors
 
 import groovy.transform.CompileStatic
+import groovy.transform.TupleConstructor
 import ru.serce.glu.gluc.ast.*
 import ru.serce.glu.gluc.semantic.SymbolInfo
 
@@ -216,10 +217,10 @@ public class CodeGenVisitor implements SimpleVisitor {
         stream.println("""
         $inst $trueLabel
         iconst_0
-        goto $falseLabel
-        $trueLabel:
+        goto $falseLabel.index
+        $trueLabel
         iconst_1
-        $falseLabel:
+        $falseLabel
         """)
     }
 
@@ -249,16 +250,16 @@ public class CodeGenVisitor implements SimpleVisitor {
 
     private void visitIfStatementNode(ASTNode node) {
         node.getChild(0).accept(this) //predicate
-        stream.println("iconst_0")
-        String endIfLabel = nextLabel()
-        stream.println("ifeq $endIfLabel")
-        node.getChild(0).accept(this)
-        stream.println("goto $endIfLabel")
+        def endIfLabel = nextLabel()
+        def elseLabel = nextLabel()
+        stream.println("ifeq $elseLabel.index")
+        node.getChild(1).accept(this)
+        stream.println("goto $endIfLabel.index")
+        stream.println(elseLabel)
         if (node.getChildren().size() == 3) {
-            String elseLabel = nextLabel()
-            stream.println(elseLabel)
             node.getChild(2).accept(this)
         }
+        stream.println(endIfLabel)
     }
 
     private void visitMethodAccessNode(ASTNode node) {
@@ -328,20 +329,30 @@ public class CodeGenVisitor implements SimpleVisitor {
     }
 
     private void visitWhileStatementNode(ASTNode node) {
-        String startLabel = nextLabel()
-        String exitLabel = nextLabel()
+        def startLabel = nextLabel()
+        def exitLabel = nextLabel()
 
-        stream.println("$startLabel:")
+        stream.println("$startLabel")
         node.getChild(0).accept(this)
-        stream.println("ifeq $exitLabel")
+        stream.println("ifeq $exitLabel.index")
         node.getChild(1).accept(this)
         stream.println("""
-        goto $startLabel
-        $exitLabel:
+        goto $startLabel.index
+        $exitLabel
         """)
     }
 
-    private String nextLabel() {
-        "label" + (++labelIndex)
+    static class Label {
+        int index
+
+        @Override
+        String toString() {
+            "label $index"
+        }
+    }
+
+    private Label nextLabel() {
+        int idx = ++labelIndex
+        new Label(index: idx)
     }
 }
