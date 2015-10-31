@@ -215,7 +215,7 @@ public class CodeGenVisitor implements SimpleVisitor {
         def trueLabel = nextLabel()
         def falseLabel = nextLabel()
         stream.println("""
-        $inst $trueLabel
+        $inst $trueLabel.index
         iconst_0
         goto $falseLabel.index
         $trueLabel

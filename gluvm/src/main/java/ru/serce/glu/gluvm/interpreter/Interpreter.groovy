@@ -88,6 +88,24 @@ class Interpreter {
             case IADD:
                 iadd()
                 break
+            case ISUB:
+                isub()
+                break
+            case IMUL:
+                imul()
+                break
+            case IDIV:
+                idiv()
+                break
+            case IOR:
+                ior()
+                break
+            case IAND:
+                iand()
+                break
+            case IXOR:
+                ixor()
+                break
             case LDC:
                 ldc(instruction.args.first())
                 break
@@ -111,6 +129,24 @@ class Interpreter {
             case GOTO:
                 gotof(instruction.args.first())
                 break
+            case IF_ICMPLT:
+                compareOp(instruction.args.first()) { Comparable a, b -> a < b }
+                break
+            case IF_ICMPLE:
+                compareOp(instruction.args.first()) { Comparable a, b -> a <= b }
+                break
+            case IF_ICMPGT:
+                compareOp(instruction.args.first()) { Comparable a, b -> a > b }
+                break
+            case IF_ICMPGE:
+                compareOp(instruction.args.first()) { Comparable a, b -> a >= b }
+                break
+            case IF_ICMPEQ:
+                compareOp(instruction.args.first()) { Comparable a, b -> a == b }
+                break
+            case IF_ICMPNE:
+                compareOp(instruction.args.first()) { Comparable a, b -> a != b }
+                break
 
             default:
                 throw new RuntimeException("Unknown instruction! $instruction")
@@ -118,6 +154,14 @@ class Interpreter {
         }
         System.err.println(stack.toList().take(sp + 1))
         System.err.println('-------------')
+    }
+
+    def compareOp(Object o, Closure op) {
+        def index = o
+        def a = pop()
+        def b = pop()
+        if (op(b, a))
+            gotof(index)
     }
 
     def gotof(Object idx) {
@@ -148,9 +192,9 @@ class Interpreter {
         def fp = frame.fp
 
 //        if (ops.size() > 0) {
-            def res = pop()
-            sp = fp
-            push(res)
+        def res = pop()
+        sp = fp
+        push(res)
 //        } else {
 //            sp = fp
 //        }
@@ -169,11 +213,48 @@ class Interpreter {
         stack[--sp]
     }
 
+    def ixor() {
+        def a = pop()
+        def b = pop()
+        push((b ^ a) ? 1 : 0)
+    }
+
     private iadd() {
         def a = pop()
         def b = pop()
         push(a + b)
     }
+
+    private isub() {
+        def a = pop()
+        def b = pop()
+        push(b - a)
+    }
+
+    private imul() {
+        def a = pop()
+        def b = pop()
+        push(a * b)
+    }
+
+    private idiv() {
+        def a = pop()
+        def b = pop()
+        push((b / a) as long)
+    }
+
+    private ior() {
+        def a = pop()
+        def b = pop()
+        push((b || a) ? 1 : 0)
+    }
+
+    private iand() {
+        def a = pop()
+        def b = pop()
+        push((b && a) ? 1 : 0)
+    }
+
 
     private invoke(Instruction instruction) {
         def sig = instruction.args.first()
