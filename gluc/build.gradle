@@ -27,6 +27,9 @@ configurations {
     flex
 }
 
+sourceSets.main.java.srcDirs = []
+sourceSets.main.groovy.srcDirs += ["src/main/java"]
+
 dependencies {
     javaCup 'nz.ac.waikato.cms.weka.thirdparty:java-cup-11b:2015.03.26'
     flex 'de.jflex:jflex:1.6.1'
