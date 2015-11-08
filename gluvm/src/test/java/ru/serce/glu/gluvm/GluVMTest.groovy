@@ -242,6 +242,7 @@ class GluVMTest {
         assertLines('25', result)
     }
 
+
     @Test
     void test14() {
         vm.eval('''
@@ -282,6 +283,30 @@ class GluVMTest {
         }
         ''')
         assertLines('1', result)
+    }
+
+    @Test
+    void test18() {
+        vm.eval('''
+        int add(int x, int y) {
+            return x + y;
+        }
+
+        void main() {
+            int a;
+            int b;
+            int c;
+            a = 1; b = 2;
+            c = add(a, b);
+            c = add(a, b);
+            c = add(a, b);
+            c = add(a, b);
+            c = add(a, b);
+            c = add(a, b);
+            println(c);
+        }
+        ''')
+        assertLines('3', result)
     }
 
 

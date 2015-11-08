@@ -3,6 +3,10 @@ package ru.serce.glu.gluvm.interpreter
 import groovy.transform.Canonical
 import ru.serce.glu.gluc.bytecode.BYTECODES
 import ru.serce.glu.gluvm.Program
+import ru.serce.glu.gluvm.compilation.CompilationTask
+
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ForkJoinPool
 
 import static ru.serce.glu.gluc.bytecode.BYTECODES.*
 
@@ -19,7 +23,7 @@ class GMethod {
     final int locals
 
     boolean stdlib = false
-    int execCounter = 0
+    int invCounter = 0
 
     GMethod(String signature, List<Instruction> instructions, int argSize, int locals, boolean stdlib = false) {
         this.locals = locals
@@ -33,12 +37,16 @@ class GMethod {
 
 class Interpreter {
 
+    static final long COMPILE_THRESHOLD = 2
+
     static final long STACK_SIZE = 2000;
     private final Map<String, GMethod> methods
     private final long[] stack = new long[STACK_SIZE]
     private int sp = 0
     private final ArrayDeque<Frame> frames = new ArrayDeque<>()
     private final Map<String, Closure> stdlib = new HashMap<>()
+
+    private final ExecutorService compilationService = new ForkJoinPool()
 
     class Frame {
         def GMethod method
@@ -262,10 +270,19 @@ class Interpreter {
         if (!method) {
             throw new RuntimeException("Unknown method signature $sig")
         }
+
+
         def frame = new Frame(method);
         frames.push(frame)
-        method.execCounter++
+        method.invCounter++
         sp += method.locals
+
+
+        if (method.invCounter >= COMPILE_THRESHOLD) {
+            def task = new CompilationTask(this, method)
+            task.run()
+        }
+
         if (method.isStdlib()) {
             if (method.isStdlib()) {
                 stdlib[method.signature](instruction.args)
@@ -284,7 +301,11 @@ class Interpreter {
 
     private iload(Object o) {
         def i = o as int
-        def frame = frames.peek()
+        def frame = frame()
         push(frame.getLocals(i))
+    }
+
+    def Frame frame() {
+        frames.peek()
     }
 }
