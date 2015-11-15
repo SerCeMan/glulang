@@ -33,7 +33,7 @@ class ByteCodeParser {
                 def vars = line[1..-1].collect { it.toInteger() }
                 def argSize = vars[0]
                 def locals = vars[1]
-                methods[sig] = new GMethod(sig, instructions, argSize, locals)
+                methods[sig] = new GMethod(sig, instructions, argSize, locals, false, true)
             } else {
                 def op = line[0].toUpperCase() as BYTECODES
                 instructions << new Instruction(op, line[1..<line.size()])

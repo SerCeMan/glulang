@@ -1,13 +1,14 @@
 package ru.serce.glu.gluvm.compilation
 
-import com.sun.org.apache.bcel.internal.generic.IRETURN
 import groovy.transform.ToString
-import groovy.transform.TupleConstructor
+import jnr.x86asm.Assembler
 import ru.serce.glu.gluvm.interpreter.GMethod
 import ru.serce.glu.gluvm.interpreter.Instruction
 import ru.serce.glu.gluvm.interpreter.Interpreter
 
+import static jnr.x86asm.Asm.*
 import static ru.serce.glu.gluc.bytecode.BYTECODES.*
+import static z.znr.MethodHandles.asm
 
 @ToString
 class Line {
@@ -54,6 +55,22 @@ class CompilationTask implements Runnable {
 
     @Override
     void run() {
+        ssaTransform()
+        // opt
+        generateAsm()
+    }
+
+    void generateAsm() {
+        method.HANDLE = asm(
+                long.class, long.class, long.class,
+                { Assembler a ->
+                    a.add(rdx, rcx);
+                    a.mov(rax, rdx);
+                    a.ret();
+                });
+    }
+
+    private void ssaTransform() {
         for (int i = 0; i < method.argSize; i++) {
             def var = nextVar()
             lines << new Line(var, interpreter.frame().getLocals(i))

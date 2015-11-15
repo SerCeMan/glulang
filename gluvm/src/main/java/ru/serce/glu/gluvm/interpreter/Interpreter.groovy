@@ -5,6 +5,7 @@ import ru.serce.glu.gluc.bytecode.BYTECODES
 import ru.serce.glu.gluvm.Program
 import ru.serce.glu.gluvm.compilation.CompilationTask
 
+import java.lang.invoke.MethodHandle
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
 
@@ -24,13 +25,18 @@ class GMethod {
 
     boolean stdlib = false
     int invCounter = 0
+    volatile MethodHandle HANDLE
+    boolean hasReturn
 
-    GMethod(String signature, List<Instruction> instructions, int argSize, int locals, boolean stdlib = false) {
+    GMethod(String signature, List<Instruction> instructions, int argSize, int locals,
+            boolean stdlib = false,
+            boolean hasReturn = false) {
         this.locals = locals
         this.signature = signature
         this.instructions = instructions
         this.stdlib = stdlib
         this.argSize = argSize
+        this.hasReturn = hasReturn
     }
 }
 
@@ -195,17 +201,10 @@ class Interpreter {
     }
 
     def retFun(Instruction instruction) {
-        def ops = instruction.args
         def frame = frames.pop()
-        def fp = frame.fp
-
-//        if (ops.size() > 0) {
         def res = pop()
-        sp = fp
+        sp = frame.fp
         push(res)
-//        } else {
-//            sp = fp
-//        }
     }
 
     def ldc(Object o) {
@@ -266,7 +265,7 @@ class Interpreter {
 
     private invoke(Instruction instruction) {
         def sig = instruction.args.first()
-        def method = methods.get(sig)
+        GMethod method = methods.get(sig)
         if (!method) {
             throw new RuntimeException("Unknown method signature $sig")
         }
@@ -284,18 +283,24 @@ class Interpreter {
         }
 
         if (method.isStdlib()) {
-            if (method.isStdlib()) {
-                stdlib[method.signature](instruction.args)
-            }
+            stdlib[method.signature](instruction.args)
         } else {
-            def instructions = method.instructions
-            for (; frame.instructionIndex < instructions.size(); frame.instructionIndex++) {
-                def instr = instructions[frame.instructionIndex]
-                interpret(instr)
+            if (method.HANDLE != null) {
+                Object[] arr = new long[method.argSize];
+                for (int i = 0; i < method.argSize; i++) {
+                    arr[i] = frame.getLocals(i);
+                }
+                frames.pop()
+                long res = (long) method.HANDLE.invokeWithArguments(arr)
+                sp = frame.fp
+                push(res)
+            } else {
+                def instructions = method.instructions
+                for (; frame.instructionIndex < instructions.size(); frame.instructionIndex++) {
+                    def instr = instructions[frame.instructionIndex]
+                    interpret(instr)
+                }
             }
-//            for (instr in method.instructions) {
-//                interpret(instr)
-//            }
         }
     }
 
