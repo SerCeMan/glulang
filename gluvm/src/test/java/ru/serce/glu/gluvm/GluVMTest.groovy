@@ -309,6 +309,30 @@ class GluVMTest {
         assertLines('3', result)
     }
 
+    @Test
+    void test19() {
+        vm.eval('''
+        int add(int x, int y) {
+            return x + y;
+        }
+
+        int sub(int x, int y) {
+            return x - y;
+        }
+
+        void main() {
+            int a;
+            int b;
+            int c;
+            a = 2; b = 1;
+            c = sub(a, b);
+            c = sub(a, b);
+            c = sub(a, b);
+            println(c);
+        }
+        ''')
+        assertLines('''1''', result)
+    }
 
 
     void assertLines(String exp, ByteArrayOutputStream baos) {
