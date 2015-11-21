@@ -38,6 +38,10 @@ class GMethod {
         this.argSize = argSize
         this.hasReturn = hasReturn
     }
+
+    boolean isCompiled() {
+        HANDLE != null
+    }
 }
 
 
@@ -277,7 +281,7 @@ class Interpreter {
         sp += method.locals
 
 
-        if (method.invCounter >= COMPILE_THRESHOLD) {
+        if (!method.isCompiled() && method.invCounter >= COMPILE_THRESHOLD) {
             def task = new CompilationTask(this, method)
             task.run()
         }
