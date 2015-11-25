@@ -28,10 +28,17 @@ enum BYTECODES {
     ISUB,
     INEG,
     ILOAD,
-    IFEQ;
+    IFEQ,
+
+    // asm only
+    JZ;
 
     private byte inx = 0;
 
     String name = name().toLowerCase()
     byte index = ++inx;
+
+
+
+
 }

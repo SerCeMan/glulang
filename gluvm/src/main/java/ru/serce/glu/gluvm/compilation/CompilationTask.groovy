@@ -2,7 +2,9 @@ package ru.serce.glu.gluvm.compilation
 
 import groovy.transform.Canonical
 import groovy.transform.ToString
+import jnr.udis86.X86Disassembler
 import jnr.x86asm.Assembler
+import jnr.x86asm.Label
 import jnr.x86asm.Register
 import ru.serce.glu.gluc.bytecode.BYTECODES
 import ru.serce.glu.gluvm.interpreter.GMethod
@@ -10,6 +12,7 @@ import ru.serce.glu.gluvm.interpreter.Instruction
 import ru.serce.glu.gluvm.interpreter.Interpreter
 
 import static jnr.x86asm.Asm.*
+import static jnr.x86asm.Immediate.imm
 import static ru.serce.glu.gluc.bytecode.BYTECODES.*
 import static z.znr.MethodHandles.asm
 
@@ -17,6 +20,23 @@ import static z.znr.MethodHandles.asm
 class Var {
     int index
     Register register
+
+
+    @Override
+    public String toString() {
+        return "Var{$index, ${register.code}}";
+    }
+}
+
+@Canonical
+class Lbl {
+    int index;
+    Register register
+
+    @Override
+    public String toString() {
+        return "Var{$index, ${register.code}}";
+    }
 }
 
 
@@ -39,10 +59,18 @@ class Line {
         this.res = res
         this.left = left
     }
+
+
+    @Override
+    public String toString() {
+        return "Line{$res = $left ${op ?: ''} ${right ?: ''}}";
+    }
 }
 
 
 class CompilationTask implements Runnable {
+
+//    public static final Jssembly jsm = new Jssembly();
 
     Interpreter interpreter
     GMethod method
@@ -56,7 +84,7 @@ class CompilationTask implements Runnable {
     ArrayDeque<Var> stack = new ArrayDeque<>()
     Var[] locals = new Var[method.argSize + method.locals]
 
-    List<Register> registers = [rcx, rdx, r8, r9, rbx, rsi, rdi]
+    List<Register> registers = [rcx, rdx, r8, r9, rbx, rsi, rdi, r10, r11, r12, r13, r14, r15]
 
 
     int counter = 0
@@ -65,6 +93,19 @@ class CompilationTask implements Runnable {
         def c = counter++
         new Var(c, registers[c])
     }
+
+    HashMap<Integer, Lbl> lbls = new HashMap<Integer, Lbl>()
+
+    Lbl createLbl(int o) {
+        return lbls.computeIfAbsent(o, { Integer k ->
+            new Lbl(k, nextReg())
+        })
+    }
+
+    Register nextReg() {
+        return registers[counter++]
+    }
+
 
     @Override
     void run() {
@@ -79,7 +120,11 @@ class CompilationTask implements Runnable {
                 { Assembler a ->
                     for (line in lines) {
                         if (!line.op) {
-                            a.mov(register(line.res), register(line.left))
+                            if (line.left instanceof Var) {
+                                a.mov(register(line.res), register(line.left))
+                            } else {
+                                a.mov(register(line.res), imm(line.left as long))
+                            }
                         } else {
                             switch (line.op) {
                                 case IADD:
@@ -90,6 +135,19 @@ class CompilationTask implements Runnable {
                                     a.mov(register(line.res), register(line.left))
                                     a.sub(register(line.res), register(line.right))
                                     break
+                                case JZ:
+                                    Label l = getLabel(a, line.res as Lbl)
+                                    a.jz_short(l, 0)
+                                    break
+                                case GOTO:
+                                    Label l = getLabel(a, line.res as Lbl)
+                                    a.jmp_short(l)
+                                    break
+                                case LABEL:
+                                    def lbl = line.res as Lbl
+                                    Label l = getLabel(a, lbl)
+                                    l.bind(a)
+                                    break
                                 default:
                                     throw new RuntimeException("Unkonw op ${line.op}")
                             }
@@ -98,6 +156,11 @@ class CompilationTask implements Runnable {
                     }
                     a.ret()
                 });
+
+    }
+
+    Label getLabel(Assembler a, Lbl lbl) {
+        a.label(lbl.index)
     }
 
     private Register register(def var) {
@@ -138,14 +201,45 @@ class CompilationTask implements Runnable {
             case RETURN:
                 retFun(instruction)
                 break
+            case ICONST_0:
+                def var = nextVar()
+                lines << new Line(var, 0)
+                push(var)
+                break
+            case ICONST_1:
+                def var = nextVar()
+                lines << new Line(var, 1)
+                push(var)
+                break
+            case IFEQ:
+                ifeq(instruction.args.first())
+                break
+            case GOTO:
+                gotof(instruction.args.first() as int)
+                break
+            case LABEL:
+                label(instruction.args.first() as int)
+                break
             default:
                 throw new IllegalArgumentException("Unknown bytecode ${instruction.code}")
         }
     }
 
+    def gotof(int o) {
+        lines << new Line(createLbl(o), null, GOTO, null)
+    }
+
+    def label(int o) {
+        lines << new Line(createLbl(o), null, LABEL, null)
+    }
+
     def retFun(Instruction instruction) {
         def var = pop()
-        lines << new Line(new Var(++counter, rax), var)
+        lines << new Line(accum(), var)
+    }
+
+    private Var accum() {
+        new Var(++counter, rax)
     }
 
 
@@ -155,6 +249,12 @@ class CompilationTask implements Runnable {
         def var = nextVar()
         lines << new Line(var, a, IADD, b)
         push(var)
+    }
+
+    def ifeq(Object val) {
+        def top = pop()
+        lines << new Line(accum(), top)
+        lines << new Line(createLbl(val as int), null, JZ, null)
     }
 
     def isub() {

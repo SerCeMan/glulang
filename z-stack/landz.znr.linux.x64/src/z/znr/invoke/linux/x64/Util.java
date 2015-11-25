@@ -18,6 +18,7 @@ package z.znr.invoke.linux.x64;
 
 import com.kenai.jffi.MemoryIO;
 import com.kenai.jffi.PageManager;
+import jnr.udis86.X86Disassembler;
 import jnr.x86asm.Assembler;
 import jnr.x86asm.CPU;
 import z.znr.InlineAssembler;
@@ -143,16 +144,16 @@ public final class Util {
 
         buf.rewind();
 
-//        if (X86Disassembler.isAvailable()) {
-//            X86Disassembler dis = X86Disassembler.create();
-//            dis.setInputBuffer(page, asm.codeSize());
-//            dis.setMode(X86Disassembler.Mode.X86_64);
-//
-//            System.out.println("Dump of asm:");
-//            while (dis.disassemble()) {
-//                System.out.println("\t" + dis.insn());
-//            }
-//        }
+        if (X86Disassembler.isAvailable()) {
+            X86Disassembler dis = X86Disassembler.create();
+            dis.setInputBuffer(page, asm.codeSize());
+            dis.setMode(X86Disassembler.Mode.X86_64);
+
+            System.err.println("Dump of asm:");
+            while (dis.disassemble()) {
+                System.err.println("\t" + dis.insn());
+            }
+        }
 
         // Make the page executable (and non-writable, since some OS require that)
         PageManager.getInstance().protectPages(page, 1, PageManager.PROT_READ | PageManager.PROT_EXEC);

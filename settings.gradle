@@ -1,4 +1,5 @@
 rootProject.name = 'glu'
 include 'gluc'
 include 'gluvm'
+include 'jassembly'
 

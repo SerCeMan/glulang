@@ -16,10 +16,13 @@
 
 package z.znr;
 
+import jnr.x86asm.*;
+import jnr.x86asm.Label;
 import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+import java.awt.*;
 import java.lang.invoke.MethodHandle;
 
 import static jnr.x86asm.Asm.*;
@@ -37,11 +40,22 @@ public class MethodHandlesTest {
       long.class, long.class, long.class,
       a -> {
 //        a.lea(rax, ptr(rdx, rcx,0,0));
+        a.mov(eax, imm(0));
+        a.mov(rax, imm(0));
+        Label l = a.label(0);
+        a.jz_short(l, 0);
         a.add(rdx, rcx);
+        l.bind(a);
         a.mov(rax, rdx);
         a.ret();
       }
   );
+  @Test
+  public void testAdd2() throws Throwable {
+    long res = (long) ADD.invoke(1, 2);
+    System.out.println(res);
+  }
+
 
   @Test
   public void testAdd() throws Throwable {

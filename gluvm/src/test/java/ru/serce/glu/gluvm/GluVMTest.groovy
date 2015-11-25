@@ -1,10 +1,12 @@
 package ru.serce.glu.gluvm
 
+import jnr.x86asm.Assembler
 import org.junit.After
 import org.junit.Before
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.*
+import static z.znr.MethodHandles.asm;
 
 /**
  * @author serce
@@ -333,6 +335,87 @@ class GluVMTest {
         ''')
         assertLines('''1''', result)
     }
+
+    @Test
+    void test20() {
+        vm.eval('''
+        int dostaff(int x, int y) {
+            int c;
+            c = 2;
+            return c;
+        }
+
+        void main() {
+            int a;
+            int b;
+            int c;
+            a = 1; b = 2;
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            println(c);
+        }
+        ''')
+        assertLines('2', result)
+    }
+
+
+    @Test
+    void test21() {
+        vm.eval('''
+        int dostaff(int x, int y) {
+            int c;
+            if (false) {
+                c = 1;
+            } else {
+                c = 2;
+            }
+            return c;
+        }
+
+        void main() {
+            int a;
+            int b;
+            int c;
+            a = 1; b = 2;
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            println(c);
+        }
+        ''')
+        assertLines('2', result)
+    }
+
+
+    @Test
+    void test22() {
+        vm.eval('''
+        int dostaff(int x, int y) {
+            int c;
+            if (false) {
+                c = 1;
+            } else {
+                c = 2;
+            }
+            return c + x;
+        }
+
+        void main() {
+            int a;
+            int b;
+            int c;
+            a = 1; b = 2;
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            println(c);
+        }
+        ''')
+        assertLines('3', result)
+    }
+
+
 
 
     void assertLines(String exp, ByteArrayOutputStream baos) {
