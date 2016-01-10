@@ -393,12 +393,12 @@ class GluVMTest {
         vm.eval('''
         int dostaff(int x, int y) {
             int c;
-            if (false) {
+            if (true) {
                 c = 1;
             } else {
                 c = 2;
             }
-            return c + x;
+            return c;
         }
 
         void main() {
@@ -412,7 +412,7 @@ class GluVMTest {
             println(c);
         }
         ''')
-        assertLines('3', result)
+        assertLines('1', result)
     }
 
 
