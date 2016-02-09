@@ -39,7 +39,7 @@ public final class CodeBuffer {
     private ByteBuffer buf;
 
     public CodeBuffer() {
-        buf = ByteBuffer.allocate(128).order(ByteOrder.LITTLE_ENDIAN);
+        buf = ByteBuffer.allocate(256).order(ByteOrder.LITTLE_ENDIAN);
     }
 
     public final void ensureSpace() {

@@ -30,9 +30,6 @@ enum BYTECODES {
     ILOAD,
     IFEQ,
 
-    // asm only
-    JZ;
-
     private byte inx = 0;
 
     String name = name().toLowerCase()

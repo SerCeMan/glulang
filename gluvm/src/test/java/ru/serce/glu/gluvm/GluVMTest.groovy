@@ -415,6 +415,32 @@ class GluVMTest {
         assertLines('1', result)
     }
 
+    @Test
+    void test23() {
+        vm.eval('''
+        int dostaff(int x, int y) {
+            int a;
+            a = 1;
+            while(a <= 5) {
+                a = a + 1;
+            }
+            return a;
+        }
+
+        void main() {
+            int a;
+            int b;
+            int c;
+            a = 1; b = 2;
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            c = dostaff(a, b);
+            println(c);
+        }
+        ''')
+        assertLines('6', result)
+    }
+
 
 
 

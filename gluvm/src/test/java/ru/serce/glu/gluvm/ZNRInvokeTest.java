@@ -41,8 +41,8 @@ public class ZNRInvokeTest {
                 a.addq(rax, rcx);
                 a.addq(rax, r8);
                 a.addq(rax, r9);
-//                a.movl(r9, a.m)
-//                a.addq(rax, a.makeAddress(rsp, 8));
+                a.movl(r10, a.makeAddress(rsp, 8));
+                a.addq(rax, r10);
                 a.ret(0);
             }
     );

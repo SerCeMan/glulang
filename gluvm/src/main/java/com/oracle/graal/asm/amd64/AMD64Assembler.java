@@ -811,7 +811,8 @@ public class AMD64Assembler extends Assembler {
         // @formatter:off
         public static final AMD64MIOp MOVB = new AMD64MIOp("MOVB", true, 0xC6, 0, OpAssertion.ByteAssertion);
         public static final AMD64MIOp MOV = new AMD64MIOp("MOV", false, 0xC7, 0);
-        public static final AMD64MIOp TEST = new AMD64MIOp("TEST", false, 0xF7, 0);
+        public static final AMD64MIOp TEST
+                = new AMD64MIOp("TEST", false, 0xF7, 0);
         // @formatter:on
 
         private final int ext;

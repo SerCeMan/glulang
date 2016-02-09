@@ -233,7 +233,9 @@ final class X64StubCompiler extends StubCompiler {
         if (canJumpToTarget) {
             AMD64Assembler asm = AMD64Assembler.create();
             inlineAssembler.assemble(asm);
-            a._buffer.put(asm.close(true));
+            byte[] res = asm.close(true);
+            System.err.println("HEX:" + getHex(res));
+            a._buffer.put(res);
             stubs.add(new Stub(name, sig(resultClass, parameterClasses), a));
             return;
         }
@@ -512,5 +514,15 @@ final class X64StubCompiler extends StubCompiler {
 
     private static long align(long offset, long align) {
         return (offset + align - 1) & ~(align - 1);
+    }
+
+    private static final String    HEXES    = "0123456789ABCDEF";
+
+    static String getHex(byte[] raw) {
+        final StringBuilder hex = new StringBuilder(2 * raw.length);
+        for (final byte b : raw) {
+            hex.append(HEXES.charAt((b & 0xF0) >> 4)).append(HEXES.charAt((b & 0x0F)));
+        }
+        return hex.toString();
     }
 }

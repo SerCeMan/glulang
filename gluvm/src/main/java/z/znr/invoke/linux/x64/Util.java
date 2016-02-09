@@ -35,6 +35,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static z.znr.invoke.linux.x64.X64StubCompiler.getHex;
+
 /**
  */
 public final class Util {
@@ -137,7 +139,9 @@ public final class Util {
         Assembler asm = new Assembler(CPU.X86_64);
         AMD64Assembler a = AMD64Assembler.create();
         inlineAssembler.assemble(a);
-        asm._buffer.put(a.close(true));
+        byte[] res = a.close(true);
+        System.err.println("HEX:" + getHex(res));
+        asm._buffer.put(res);
 
         long page = PageManager.getInstance().allocatePages(1, PageManager.PROT_READ | PageManager.PROT_WRITE);
         ByteBuffer buf = ByteBuffer.allocate(asm.codeSize());
